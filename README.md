@@ -1,7 +1,7 @@
 chord-transitions
 =================
 
-Need bower installed.
+Need bower installed (npm install -g bower).
 
 1. Clone the repo and cd into the directory
 3. bower install
