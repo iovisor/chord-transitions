@@ -3,15 +3,29 @@ angular.module('app', []);
 angular.module('app').controller('mainCntrl', ['$scope', 
 function ($scope) {
 
-  $scope.master = {}; // MASTER DATA STORED BY YEAR
+  $scope.master = {}; // MASTER DATA STORED BY VNI
 
-  $scope.selected_year = 2005;
-  $scope.years = d3.range(2005, 1865, -5);
+  $scope.selected_vni = "all";
+  $scope.vnis = ["all"];
 
   $scope.filters = {};
   $scope.hasFilters = false;
+  $scope.refreshTimeout = 15 * 1000;
+  $scope.refreshLabel = "stop";
 
   $scope.tooltip = {};
+
+  $scope.toggleRefresh = function () {
+    if ($scope.refreshTimeout > 0) {
+      $scope.refreshTimeout = 0;
+      $scope.refreshLabel = "start";
+      window.clearTimeout($scope.refreshTimer);
+    } else {
+      $scope.refreshTimeout = 15 * 1000;
+      $scope.refreshLabel = "stop";
+      $scope.refreshData();
+    }
+  };
 
   // FORMATS USED IN TOOLTIP TEMPLATE IN HTML
   $scope.pFormat = d3.format(".1%");  // PERCENT FORMAT
@@ -26,46 +40,72 @@ function ($scope) {
     $scope.hasFilters = true;
     $scope.filters[name] = {
       name: name,
-      hide: true
+      show: true
     };
     $scope.$apply();
   };
 
   $scope.update = function () {
-    var data = $scope.master[$scope.selected_year];
+    var data = [];
+    if ($scope.selected_vni === 'all') {
+      Object.keys($scope.master).forEach(function (k) {
+        data = data.concat($scope.master[k]);
+      });
+    } else {
+      data = $scope.master[$scope.selected_vni];
+    }
 
-    if (data && $scope.hasFilters) {
-      $scope.drawChords(data.filter(function (d) {
+    if ($scope.hasFilters) {
+      data = data.filter(function (d) {
         var fl = $scope.filters;
-        var v1 = d.importer1, v2 = d.importer2;
-
-        if ((fl[v1] && fl[v1].hide) || (fl[v2] && fl[v2].hide)) {
-          return false;
+        var v1 = d.outer_sip;
+        var v2 = d.outer_dip;
+        if ((fl[v1] && fl[v1].show) || (fl[v2] && fl[v2].show)) {
+          return true;
         }
-        return true;
-      }));
-    } else if (data) {
+        return false;
+      });
+    }
+
+    // put the interesting fields into something chord will display
+    data = data.map(function (d) {
+      if ($scope.hasFilters) {
+        d.edge1 = d["inner_sip"];
+        d.edge2 = d["inner_dip"];
+      } else {
+        d.edge1 = d["outer_sip"];
+        d.edge2 = d["outer_dip"];
+      }
+      d.value1 = d["rx_bytes"];
+      d.value2 = d["tx_bytes"];
+      return d;
+    });
+
+    if (data) {
       $scope.drawChords(data);
     }
   };
 
-  // IMPORT THE CSV DATA
-  d3.csv('../data/trade.csv', function (err, data) {
-
-    data.forEach(function (d) {
-      d.year  = +d.year;
-      d.flow1 = +d.flow1;
-      d.flow2 = +d.flow2;
-
-      if (!$scope.master[d.year]) {
-        $scope.master[d.year] = []; // STORED BY YEAR
+  $scope.refreshData = function () {
+    $.getJSON('../data/tunnel-total.json', function (data) {
+      $scope.master = {};
+      data.forEach(function (d) {
+        if (!$scope.master[d.vni]) {
+          $scope.master[d.vni] = [];
+        }
+        $scope.master[d.vni].push(d);
+      })
+      $scope.vnis = ["all"].concat(Object.keys($scope.master));
+      $scope.update();
+      if ($scope.refreshTimeout > 0) {
+        $scope.refreshTimer = window.setTimeout($scope.refreshData, $scope.refreshTimeout);
       }
-      $scope.master[d.year].push(d);
-    })
-    $scope.update();
-  });
+    });
+  };
+  $scope.refreshData();
 
-  $scope.$watch('selected_year', $scope.update);
+  $scope.$watch('selected_vni', $scope.update);
   $scope.$watch('filters', $scope.update, true);
+  $scope.$watch('reset', $scope.resetData);
 
 }]);

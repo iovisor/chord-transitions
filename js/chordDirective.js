@@ -21,8 +21,8 @@ function ($window, matrixFactory) {
     var matrix = matrixFactory.chordMatrix()
       .layout(chord)
       .filter(function (item, r, c) {
-        return (item.importer1 === r.name && item.importer2 === c.name) ||
-               (item.importer1 === c.name && item.importer2 === r.name);
+        return (item.edge1 === r.name && item.edge2 === c.name) ||
+               (item.edge1 === c.name && item.edge2 === r.name);
       })
       .reduce(function (items, r, c) {
         var value;
@@ -31,9 +31,9 @@ function ($window, matrixFactory) {
         } else {
           value = items.reduce(function (m, n) {
             if (r === c) {
-              return m + (n.flow1 + n.flow2);
+              return m + (n.value1 + n.value2);
             } else {
-              return m + (n.importer1 === r.name ? n.flow1: n.flow2);
+              return m + (n.edge1 === r.name ? n.value1: n.value2);
             }
           }, 0);
         }
@@ -71,7 +71,7 @@ function ($window, matrixFactory) {
 
       matrix.data(data)
         .resetKeys()
-        .addKeys(['importer1', 'importer2'])
+        .addKeys(['edge1', 'edge2'])
         .update()
 
       var groups = container.selectAll("g.group")

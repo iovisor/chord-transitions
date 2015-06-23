@@ -1,0 +1,98 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable = no" />
+    <title>delimited | Chord Transitions</title>
+    <link rel="stylesheet" href="../bower_components/foundation/css/foundation.css" />
+    <link rel="stylesheet" type="text/css" href="../css/app.css">
+    <script src="../bower_components/modernizr/modernizr.js"></script>
+    <script src="../bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="../bower_components/angular/angular.min.js"></script>
+  </head>
+  <body ng-app="app" ng-cloak ng-controller="mainCntrl">
+
+    <div class="row">
+      <div class="large-12 columns">
+        <h1>Tunnel Flows</h1>
+        <hr/>
+      </div>
+    </div>
+
+    <div class="row" style="position:relative;">
+
+      <aside class="large-2 small-2 columns panel vnis">
+        <h5>VNI</h5>
+        <ul class="side-nav">
+          <li ng-repeat="vni in vnis">
+            <input ng-model="$parent.selected_vni" type="radio" name="vnis" ng-value="vni" id="vni_{{ vni }}">
+            <label for="vni_{{ vni }}">{{ vni }}</label>
+          </li>
+        </ul>
+      </aside>
+
+      <div class="large-7 small-6 columns" role="content">
+        <article>
+          <chord-diagram></chord-diagram>
+          <h6 class="text-center">Tunnel Flows <span>{{ selected_vni }}</span></h6>
+        </article>
+      </div>
+
+      <aside class="large-3 small-4 columns">
+        <h5>Filters</h5>
+        <button class="button tiny right" ng-click="filters = {}; hasFilters = false;">
+          clear
+        </button>
+        <div class="panel">
+          <div ng-if="hasFilters === false" style="margin: 15px; opacity: 0.5;">
+            Click a host IP to see inner traffic
+          </div>
+          <ul class="side-nav">
+            <li ng-repeat="filter in filters">
+              <input ng-model="filter.show" id="{{ filter.name }}" type="checkbox">
+              <label for="{{ filter.name }}">{{ filter.name }}</label>
+            </li>
+          </ul>
+        </div>
+        <button class="button tiny center" ng-click="toggleRefresh(); ">
+          {{ refreshLabel }} auto-refresh
+        </button>
+      </aside>
+
+      <fieldset id="tooltip" class="row secondary">
+        <div class="large-12 small-12 columns">
+          <h6>{{ tooltip.sname }} received from  {{ tooltip.tname }} : {{ qFormat(tooltip.svalue) }}B</h6>
+          {{ pFormat(tooltip.svalue/tooltip.stotal) }} of {{ tooltip.sname }}'s Total ({{ qFormat(tooltip.stotal) }}B)
+          {{ pFormat(tooltip.svalue/tooltip.mtotal) }} of Total of {{ qFormat(tooltip.mtotal) }}B
+        </div>
+        <div class="large-12 small-12 columns">
+          <h6>{{ tooltip.tname }} received from  {{ tooltip.sname }} : {{ qFormat(tooltip.tvalue) }}B</h6>
+          {{ pFormat(tooltip.tvalue/tooltip.ttotal) }} of {{ tooltip.tname }}'s Total ({{ qFormat(tooltip.ttotal) }}B)
+          {{ pFormat(tooltip.tvalue/tooltip.mtotal) }} of Total of {{ qFormat(tooltip.mtotal) }}B
+        </div>
+      </fieldset>
+
+    </div>
+
+    <footer class="row">
+      <div class="large-12 columns">
+        <ul class="inline-list left">
+          <!--
+          <li>Colors by <a target="_blank" href="http://en.wikipedia.org/wiki/Paul_Klee">Paul Klee</a></li>
+          <li>Design by <a target="_blank" href="http://www.delimited.io/blog">delimited.io</a></li>
+          <li>Data from <a target="_blank" href="http://www.correlatesofwar.org">Correlates of War</a></li>
+          -->
+        </ul>
+      </div>
+    </footer>
+
+    <script src="../bower_components/d3/d3.min.js"></script>
+    <script src="../bower_components/foundation/js/foundation.min.js"></script>
+    <script src="../js/mainController.js"></script>
+    <script src="../js/matrixFactory.js"></script>
+    <script src="../js/chordDirective.js"></script>
+    <script>
+      $(document).foundation();
+    </script>
+  </body>
+</html>
