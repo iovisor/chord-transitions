@@ -87,7 +87,7 @@ function ($scope) {
   };
 
   $scope.refreshData = function () {
-    $.getJSON('../data/tunnel-total.json', function (data) {
+    $.getJSON('../data/tunnel-delta.json', function (data) {
       $scope.master = {};
       data.forEach(function (d) {
         if (!$scope.master[d.vni]) {
